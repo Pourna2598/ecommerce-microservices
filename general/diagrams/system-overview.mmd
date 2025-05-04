@@ -1,0 +1,29 @@
+graph TB
+    Client[Client Browser] --> Ingress[Ingress Controller]
+    Ingress --> Gateway[API Gateway]
+    
+    subgraph Services
+        Gateway --> User[User Service]
+        Gateway --> Product[Product Service]
+        Gateway --> Order[Order Service]
+        Gateway --> Payment[Payment Service]
+        Gateway --> Notification[Notification Service]
+    end
+    
+    subgraph Infrastructure
+        User --> MongoDB[(MongoDB)]
+        Product --> MongoDB
+        Order --> MongoDB
+        Payment --> MongoDB
+        Notification --> MongoDB
+        
+        Order --> RabbitMQ[(RabbitMQ)]
+        Payment --> RabbitMQ
+        Notification --> RabbitMQ
+    end
+    
+    style Client fill:#f9f,stroke:#333,stroke-width:2px
+    style Ingress fill:#bbf,stroke:#333,stroke-width:2px
+    style Gateway fill:#bfb,stroke:#333,stroke-width:2px
+    style Services fill:#fbb,stroke:#333,stroke-width:2px
+    style Infrastructure fill:#bff,stroke:#333,stroke-width:2px 

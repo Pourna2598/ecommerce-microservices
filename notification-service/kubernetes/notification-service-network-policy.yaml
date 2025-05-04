@@ -1,0 +1,50 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: notification-service-network-policy
+    namespace: ecommerce
+    labels:
+        app: notification-service
+        component: network-policy
+    annotations:
+        description: "Network Policy for Notification Service"
+        version: "1.0"
+spec:
+    podSelector:
+        matchLabels:
+            app: notification-service
+    policyTypes:
+        - Ingress
+        - Egress
+    ingress:
+        - from:
+              - namespaceSelector:
+                    matchLabels:
+                        name: ecommerce
+              - podSelector:
+                    matchLabels:
+                        app: order-service
+              - podSelector:
+                    matchLabels:
+                        app: user-service
+          ports:
+              - protocol: TCP
+                port: 8085
+    egress:
+        - to:
+              - namespaceSelector:
+                    matchLabels:
+                        name: ecommerce
+              - podSelector:
+                    matchLabels:
+                        app: mongodb
+              - podSelector:
+                    matchLabels:
+                        app: rabbitmq
+          ports:
+              - protocol: TCP
+                port: 27017 # MongoDB
+              - protocol: TCP
+                port: 5672 # RabbitMQ
+              - protocol: TCP
+                port: 8085 # Internal services

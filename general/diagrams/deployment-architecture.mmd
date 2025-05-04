@@ -1,0 +1,50 @@
+graph TB
+    subgraph Kubernetes Namespace: ecommerce
+        subgraph Ingress
+            NGINX[NGINX Ingress Controller]
+        end
+
+        subgraph Services
+            Gateway[API Gateway<br/>Deployment]
+            User[User Service<br/>Deployment]
+            Product[Product Service<br/>Deployment]
+            Order[Order Service<br/>Deployment]
+            Payment[Payment Service<br/>Deployment]
+            Notification[Notification Service<br/>Deployment]
+        end
+
+        subgraph Infrastructure
+            MongoDB[(MongoDB<br/>StatefulSet)]
+            RabbitMQ[(RabbitMQ<br/>StatefulSet)]
+        end
+
+        subgraph Storage
+            PVC1[MongoDB PVC]
+            PVC2[RabbitMQ PVC]
+        end
+    end
+
+    NGINX --> Gateway
+    Gateway --> User
+    Gateway --> Product
+    Gateway --> Order
+    Gateway --> Payment
+    Gateway --> Notification
+
+    User --> MongoDB
+    Product --> MongoDB
+    Order --> MongoDB
+    Payment --> MongoDB
+    Notification --> MongoDB
+
+    Order --> RabbitMQ
+    Payment --> RabbitMQ
+    Notification --> RabbitMQ
+
+    MongoDB --> PVC1
+    RabbitMQ --> PVC2
+
+    style Kubernetes fill:#bbf,stroke:#333,stroke-width:2px
+    style Services fill:#bfb,stroke:#333,stroke-width:2px
+    style Infrastructure fill:#fbb,stroke:#333,stroke-width:2px
+    style Storage fill:#bff,stroke:#333,stroke-width:2px 

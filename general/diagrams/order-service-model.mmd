@@ -1,0 +1,66 @@
+classDiagram
+    class OrderService {
+        +createOrder(orderData)
+        +getOrderById(id)
+        +getMyOrders(userId)
+        +getAllOrders(filters)
+        +updateOrderStatus(id, status)
+        +cancelOrder(id, reason)
+        +getOrderStats()
+        +getUserOrders(userId)
+        +updateOrderToPaid(id, paymentData)
+    }
+
+    class Order {
+        +String id
+        +String userId
+        +Array orderItems
+        +Object shippingAddress
+        +String paymentMethod
+        +Object paymentResult
+        +Float itemsPrice
+        +Float taxPrice
+        +Float shippingPrice
+        +Float totalPrice
+        +Boolean isPaid
+        +Date paidAt
+        +Boolean isDelivered
+        +Date deliveredAt
+        +String status
+        +String cancellationReason
+        +Date createdAt
+        +Date updatedAt
+        +isCancellable()
+        +calculateTotals()
+    }
+
+    class OrderRepository {
+        +findById(id)
+        +findByUserId(userId)
+        +findAll(filters)
+        +save(order)
+        +update(id, data)
+        +delete(id)
+        +getStats()
+    }
+
+    class OrderProcessor {
+        +validateOrder(orderData)
+        +processOrder(order)
+        +updateStatus(orderId, status)
+        +handleCancellation(orderId, reason)
+        +publishOrderEvent(eventType, order)
+    }
+
+    class StockValidator {
+        +checkStockAvailability(items)
+        +updateStock(items)
+        +validateStock(items)
+    }
+
+    OrderService --> OrderRepository
+    OrderService --> OrderProcessor
+    OrderService --> StockValidator
+    OrderRepository --> Order
+    OrderProcessor --> Order
+    StockValidator --> Order 

@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: mongodb-init
+    namespace: ecommerce
+    labels:
+        app: mongodb
+        component: init
+    annotations:
+        description: "MongoDB initialization scripts"
+data:
+    init-mongo.js: |
+        // Create admin user
+        db = db.getSiblingDB('admin');
+        db.createUser({
+            user: 'root',
+            pwd: 'password',
+            roles: [{ role: 'root', db: 'admin' }]
+        });
+
+        // Create service-specific users and databases
+        db = db.getSiblingDB('userdb');
+        db.createUser({
+            user: 'usersrv',
+            pwd: 'userpass',
+            roles: [{ role: 'readWrite', db: 'userdb' }]
+        });
+
+        db = db.getSiblingDB('productdb');
+        db.createUser({
+            user: 'prodsrv',
+            pwd: 'prodpass',
+            roles: [{ role: 'readWrite', db: 'productdb' }]
+        });
+
+        db = db.getSiblingDB('orderdb');
+        db.createUser({
+            user: 'ordsrv',
+            pwd: 'ordpass',
+            roles: [{ role: 'readWrite', db: 'orderdb' }]
+        });
+
+        db = db.getSiblingDB('paymentdb');
+        db.createUser({
+            user: 'paysrv',
+            pwd: 'paypass',
+            roles: [{ role: 'readWrite', db: 'paymentdb' }]
+        });
+
+        db = db.getSiblingDB('notificationdb');
+        db.createUser({
+            user: 'notsrv',
+            pwd: 'notpass',
+            roles: [{ role: 'readWrite', db: 'notificationdb' }]
+        });
+
+        // Create admin user in userdb
+        db = db.getSiblingDB('userdb');
+        db.users.insertOne({
+            email: 'admin@ecommerce.com',
+            password: '$2b$10$8K1p/a0dR1xqM8K3hQzC3OQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZ', // Hashed 'admin' password
+            role: 'admin',
+            firstName: 'Admin',
+            lastName: 'User',
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+
+        // Seed products
+        db = db.getSiblingDB('productdb');
+
+        // Sample categories
+        const categories = [
+            "electronics", "clothing", "books", "home", "beauty",
+            "toys", "sports", "automotive", "garden", "office"
+        ];
+
+        // Sample product names by category
+        const productNames = {
+            electronics: ["Smartphone", "Laptop", "Tablet", "Headphones", "Smartwatch"],
+            clothing: ["T-Shirt", "Jeans", "Dress", "Jacket", "Sweater"],
+            books: ["Novel", "Cookbook", "Biography", "Textbook", "Self-Help Book"],
+            home: ["Couch", "Bed", "Table", "Chair", "Lamp"],
+            beauty: ["Lipstick", "Shampoo", "Perfume", "Face Cream", "Soap"],
+            toys: ["Action Figure", "Board Game", "Puzzle", "Doll", "Remote Control Car"],
+            sports: ["Basketball", "Tennis Racket", "Soccer Ball", "Yoga Mat", "Weights"],
+            automotive: ["Car Seat", "Tire", "Brake Pad", "Car Wax", "Oil Filter"],
+            garden: ["Plant Pot", "Garden Hose", "Lawn Mower", "Seeds", "Fertilizer"],
+            office: ["Notebook", "Pen Set", "Desk", "Office Chair", "Stapler"]
+        };
+
+        // Sample brands by category
+        const brands = {
+            electronics: ["Samsung", "Apple", "Sony", "LG", "Bose"],
+            clothing: ["Nike", "Adidas", "H&M", "Zara", "Levi's"],
+            books: ["Penguin", "Random House", "HarperCollins", "Simon & Schuster", "Macmillan"],
+            home: ["IKEA", "Wayfair", "Ashley", "Pottery Barn", "Crate & Barrel"],
+            beauty: ["L'Oreal", "Maybelline", "MAC", "Estee Lauder", "Clinique"],
+            toys: ["LEGO", "Hasbro", "Mattel", "Fisher-Price", "Playmobil"],
+            sports: ["Nike", "Adidas", "Under Armour", "Wilson", "Callaway"],
+            automotive: ["Michelin", "Bosch", "Castrol", "Goodyear", "3M"],
+            garden: ["Scotts", "Miracle-Gro", "Black & Decker", "Fiskars", "Weber"],
+            office: ["Staples", "Office Depot", "Moleskine", "Sharpie", "Post-it"]
+        };
+
+        // Sample adjectives
+        const adjectives = [
+            "Premium", "Deluxe", "Professional", "Advanced", "Modern",
+            "Classic", "Eco-friendly", "Smart", "Portable", "Wireless"
+        ];
+
+        // Generate random number between min and max
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Generate random price
+        function getRandomPrice(min, max) {
+            return (Math.random() * (max - min) + min).toFixed(2);
+        }
+
+        // Generate a random product
+        function generateProduct() {
+            const mainCategory = categories[getRandomInt(0, categories.length - 1)];
+            const productType = productNames[mainCategory][getRandomInt(0, productNames[mainCategory].length - 1)];
+            const brand = brands[mainCategory][getRandomInt(0, brands[mainCategory].length - 1)];
+            const adjective = adjectives[getRandomInt(0, adjectives.length - 1)];
+            
+            const name = `${adjective} ${brand} ${productType}`;
+            const price = getRandomPrice(9.99, 999.99);
+            const stockQuantity = getRandomInt(0, 500);
+            
+            return {
+                name,
+                description: `This ${adjective.toLowerCase()} ${productType.toLowerCase()} from ${brand} offers exceptional value.`,
+                price: parseFloat(price),
+                stockQuantity,
+                categories: [mainCategory],
+                createdAt: new Date()
+            };
+        }
+
+        // Clear existing products
+        db.products.deleteMany({});
+
+        // Generate and insert 100 products
+        const products = [];
+        for (let i = 0; i < 100; i++) {
+            products.push(generateProduct());
+        }
+
+        db.products.insertMany(products);
+        print('Products seeded successfully!');

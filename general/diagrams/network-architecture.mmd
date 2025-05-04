@@ -1,0 +1,47 @@
+graph TB
+    subgraph Internet
+        Client[Client Browser]
+    end
+
+    subgraph Kubernetes Cluster
+        subgraph Ingress
+            NGINX[NGINX Ingress Controller]
+        end
+
+        subgraph Services
+            Gateway[API Gateway]
+            User[User Service]
+            Product[Product Service]
+            Order[Order Service]
+            Payment[Payment Service]
+            Notification[Notification Service]
+        end
+
+        subgraph Data Layer
+            MongoDB[(MongoDB)]
+            RabbitMQ[(RabbitMQ)]
+        end
+    end
+
+    Client --> NGINX
+    NGINX --> Gateway
+    Gateway --> User
+    Gateway --> Product
+    Gateway --> Order
+    Gateway --> Payment
+    Gateway --> Notification
+
+    User --> MongoDB
+    Product --> MongoDB
+    Order --> MongoDB
+    Payment --> MongoDB
+    Notification --> MongoDB
+
+    Order --> RabbitMQ
+    Payment --> RabbitMQ
+    Notification --> RabbitMQ
+
+    style Internet fill:#f9f,stroke:#333,stroke-width:2px
+    style Kubernetes fill:#bbf,stroke:#333,stroke-width:2px
+    style Services fill:#bfb,stroke:#333,stroke-width:2px
+    style Data fill:#fbb,stroke:#333,stroke-width:2px 

@@ -1,0 +1,55 @@
+classDiagram
+    class ProductService {
+        +getAllProducts(filters)
+        +getProductById(id)
+        +createProduct(productData)
+        +updateProduct(id, data)
+        +deleteProduct(id)
+        +searchProducts(query)
+        +updateStock(id, quantity)
+        +getTopProducts()
+        +getProductStats()
+        +checkStockAndUpdate(items)
+    }
+
+    class Product {
+        +String id
+        +String name
+        +String description
+        +Float price
+        +Integer stockQuantity
+        +Array categories
+        +Date createdAt
+        +Date updatedAt
+    }
+
+    class ProductRepository {
+        +findById(id)
+        +findAll(filters)
+        +save(product)
+        +update(id, data)
+        +delete(id)
+        +updateStock(id, quantity)
+        +search(query)
+        +getStats()
+    }
+
+    class StockValidator {
+        +validateStock(items)
+        +checkAvailability(productId, quantity)
+        +updateStock(productId, quantity)
+    }
+
+    class SearchService {
+        +searchByText(query)
+        +searchByCategory(category)
+        +searchByPriceRange(min, max)
+        +getTopProducts(limit)
+    }
+
+    ProductService --> ProductRepository
+    ProductService --> StockValidator
+    ProductService --> SearchService
+    ProductRepository --> Product
+    StockValidator --> Product
+    SearchService --> Product 

@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: notification-service
+    namespace: ecommerce
+    labels:
+        app: notification-service
+        component: backend
+    annotations:
+        description: "Notification Service Deployment"
+        version: "1.0"
+spec:
+    replicas: 1
+    strategy:
+        type: RollingUpdate
+        rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+    selector:
+        matchLabels:
+            app: notification-service
+    template:
+        metadata:
+            labels:
+                app: notification-service
+                component: backend
+            annotations:
+                prometheus.io/scrape: "true"
+                prometheus.io/port: "8085"
+        spec:
+            securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 3000
+                fsGroup: 2000
+            containers:
+                - name: notification-service
+                  image: notification-service:1.0
+                  imagePullPolicy: Never
+                  ports:
+                      - containerPort: 8085
+                  env:
+                      - name: NODE_ENV
+                        value: "development"
+                      - name: PORT
+                        value: "8085"
+                      - name: MONGODB_URI
+                        value: "mongodb://notsrv:notpass@mongodb:27017/notificationdb?authSource=admin"
+                      - name: JWT_SECRET
+                        valueFrom:
+                            secretKeyRef:
+                                name: notification-service-secrets
+                                key: JWT_SECRET
+                      - name: JWT_EXPIRATION
+                        value: "30d"
+                      - name: SERVICE_SECRET
+                        valueFrom:
+                            secretKeyRef:
+                                name: notification-service-secrets
+                                key: SERVICE_SECRET
+                      - name: RABBITMQ_URL
+                        value: "amqp://rabbitmq:5672"
+                      - name: USER_SERVICE_URL
+                        value: "http://user-service:8081"
+                      - name: ORDER_SERVICE_URL
+                        value: "http://order-service:8083"
+                      - name: EMAIL_USER
+                        valueFrom:
+                            secretKeyRef:
+                                name: notification-service-secrets
+                                key: EMAIL_USER
+                      - name: EMAIL_PASS
+                        valueFrom:
+                            secretKeyRef:
+                                name: notification-service-secrets
+                                key: EMAIL_PASS
+                      - name: EMAIL_HOST
+                        valueFrom:
+                            secretKeyRef:
+                                name: notification-service-secrets
+                                key: EMAIL_HOST
+                      - name: EMAIL_PORT
+                        valueFrom:
+                            secretKeyRef:
+                                name: notification-service-secrets
+                                key: EMAIL_PORT
+                      - name: EMAIL_FROM
+                        valueFrom:
+                            secretKeyRef:
+                                name: notification-service-secrets
+                                key: EMAIL_FROM
+                  resources:
+                      requests:
+                          memory: "256Mi"
+                          cpu: "200m"
+                      limits:
+                          memory: "512Mi"
+                          cpu: "500m"
+                  livenessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8085
+                      initialDelaySeconds: 30
+                      periodSeconds: 10
+                  readinessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8085
+                      initialDelaySeconds: 5
+                      periodSeconds: 5
+                  startupProbe:
+                      httpGet:
+                          path: /health
+                          port: 8085
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                  volumeMounts:
+                      - name: tmp
+                        mountPath: /tmp
+                  securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop:
+                              - ALL
+                      readOnlyRootFilesystem: true
+            volumes:
+                - name: tmp
+                  emptyDir: {}
+            affinity:
+                podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                        - weight: 100
+                          podAffinityTerm:
+                              labelSelector:
+                                  matchExpressions:
+                                      - key: app
+                                        operator: In
+                                        values:
+                                            - notification-service
+                              topologyKey: kubernetes.io/hostname
+            tolerations:
+                - key: "node-role.kubernetes.io/master"
+                  operator: "Exists"
+                  effect: "NoSchedule"

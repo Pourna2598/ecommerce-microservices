@@ -1,0 +1,65 @@
+classDiagram
+    class NotificationService {
+        +createNotification(notificationData)
+        +getNotifications(userId)
+        +getNotificationById(id)
+        +markAsRead(id)
+        +markAllNotificationsAsRead(userId)
+        +deleteNotification(id)
+        +getUnreadCount(userId)
+        +getNotificationStats()
+        +getAllNotifications()
+        +processNotification(data)
+    }
+
+    class Notification {
+        +String id
+        +String userId
+        +String title
+        +String message
+        +String type
+        +Boolean read
+        +Date readAt
+        +Object data
+        +String priority
+        +Date createdAt
+        +Date updatedAt
+    }
+
+    class NotificationRepository {
+        +findById(id)
+        +findByUserId(userId)
+        +findAll(filters)
+        +save(notification)
+        +update(id, data)
+        +delete(id)
+        +getStats()
+    }
+
+    class EmailService {
+        +sendNotificationEmail(notification, email)
+        +renderTemplate(template, data)
+        +validateEmail(email)
+    }
+
+    class TemplateService {
+        +getTemplateByName(type)
+        +renderTemplate(template, data)
+        +initializeDefaultTemplates()
+    }
+
+    class EventProcessor {
+        +processOrderNotification(data)
+        +processPaymentNotification(data)
+        +processSystemNotification(data)
+        +processPromotionNotification(data)
+    }
+
+    NotificationService --> NotificationRepository
+    NotificationService --> EmailService
+    NotificationService --> TemplateService
+    NotificationService --> EventProcessor
+    NotificationRepository --> Notification
+    EmailService --> Notification
+    TemplateService --> Notification
+    EventProcessor --> Notification 

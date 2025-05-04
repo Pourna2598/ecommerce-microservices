@@ -1,0 +1,201 @@
+version: "3.8"
+
+services:
+    # API Gateway
+    api-gateway:
+        build:
+            context: ../api-gateway
+            dockerfile: Dockerfile
+        container_name: api-gateway
+        ports:
+            - "8000:8000"
+        environment:
+            - NODE_ENV=development
+            - PORT=8000
+            - JWT_SECRET=${JWT_SECRET}
+            - JWT_EXPIRES_IN=24h
+            - USER_SERVICE_URL=http://user-service:8081
+            - PRODUCT_SERVICE_URL=http://product-service:8082
+            - ORDER_SERVICE_URL=http://order-service:8083
+            - PAYMENT_SERVICE_URL=http://payment-service:8084
+            - NOTIFICATION_SERVICE_URL=http://notification-service:8085
+            - RATE_LIMIT_WINDOW_MS=900000
+            - RATE_LIMIT_MAX=100
+        networks:
+            - ecommerce-network
+        depends_on:
+            - user-service
+            - product-service
+            - order-service
+            - payment-service
+            - notification-service
+
+    # User Service
+    user-service:
+        build:
+            context: ../user-service
+            dockerfile: Dockerfile
+        container_name: user-service
+        ports:
+            - "8081:8081"
+        environment:
+            - NODE_ENV=development
+            - PORT=8081
+            - MONGODB_URI=mongodb://usersrv:userpass@mongodb:27017/userdb?authSource=admin
+            - JWT_SECRET=${JWT_SECRET}
+            - JWT_EXPIRATION=24h
+        depends_on:
+            - mongodb
+        networks:
+            - ecommerce-network
+
+    # Product Service
+    product-service:
+        build:
+            context: ../product-service
+            dockerfile: Dockerfile
+        container_name: product-service
+        ports:
+            - "8082:8082"
+        environment:
+            - NODE_ENV=development
+            - PORT=8082
+            - MONGODB_URI=mongodb://prodsrv:prodpass@mongodb:27017/productdb?authSource=admin
+            - JWT_SECRET=${JWT_SECRET}
+        depends_on:
+            - mongodb
+        networks:
+            - ecommerce-network
+
+    # Order Service
+    order-service:
+        build:
+            context: ../order-service
+            dockerfile: Dockerfile
+        container_name: order-service
+        ports:
+            - "8083:8083"
+        environment:
+            - NODE_ENV=development
+            - PORT=8083
+            - MONGODB_URI=mongodb://ordsrv:ordpass@mongodb:27017/orderdb?authSource=admin
+            - JWT_SECRET=${JWT_SECRET}
+            - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+            - USER_SERVICE_URL=http://user-service:8081
+            - PRODUCT_SERVICE_URL=http://product-service:8082
+            - NOTIFICATION_SERVICE_URL=http://notification-service:8085
+        depends_on:
+            - mongodb
+            - rabbitmq
+            - user-service
+            - product-service
+            - notification-service
+        networks:
+            - ecommerce-network
+
+    # Payment Service
+    payment-service:
+        build:
+            context: ../payment-service
+            dockerfile: Dockerfile
+        container_name: payment-service
+        ports:
+            - "8084:8084"
+        environment:
+            - NODE_ENV=development
+            - PORT=8084
+            - MONGODB_URI=mongodb://paysrv:paypass@mongodb:27017/paymentdb?authSource=admin
+            - JWT_SECRET=${JWT_SECRET}
+            - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+            - ORDER_SERVICE_URL=http://order-service:8083
+            - NOTIFICATION_SERVICE_URL=http://notification-service:8085
+        depends_on:
+            - mongodb
+            - rabbitmq
+            - order-service
+            - notification-service
+        networks:
+            - ecommerce-network
+
+    # Notification Service
+    notification-service:
+        build:
+            context: ../notification-service
+            dockerfile: Dockerfile
+        container_name: notification-service
+        ports:
+            - "8085:8085"
+        environment:
+            - NODE_ENV=development
+            - PORT=8085
+            - MONGODB_URI=mongodb://notsrv:notpass@mongodb:27017/notificationdb?authSource=admin
+            - JWT_SECRET=${JWT_SECRET}
+            - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+            - EMAIL_SERVICE=smtp
+            - EMAIL_HOST=${EMAIL_HOST}
+            - EMAIL_PORT=${EMAIL_PORT}
+            - EMAIL_USER=${EMAIL_USER}
+            - EMAIL_PASS=${EMAIL_PASS}
+            - EMAIL_FROM=noreply@ecommerce.com
+        depends_on:
+            - mongodb
+            - rabbitmq
+        networks:
+            - ecommerce-network
+
+    # MongoDB
+    mongodb:
+        image: mongo:4.4
+        container_name: mongodb
+        ports:
+            - "27017:27017"
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: admin
+            MONGO_INITDB_ROOT_PASSWORD: admin123
+        volumes:
+            - mongodb_data:/data/db
+            - ./mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+        networks:
+            - ecommerce-network
+
+    # RabbitMQ
+    rabbitmq:
+        image: rabbitmq:3-management-alpine
+        container_name: rabbitmq
+        ports:
+            - "5672:5672" # AMQP protocol port
+            - "15672:15672" # Management UI
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+        volumes:
+            - ../rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+            - ../rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+            - rabbitmq_data:/var/lib/rabbitmq
+        networks:
+            - ecommerce-network
+        healthcheck:
+            test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
+    # Redis
+    redis:
+        image: redis:alpine
+        container_name: redis
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis_data:/data
+        networks:
+            - ecommerce-network
+
+volumes:
+    mongodb_data:
+    rabbitmq_data:
+    redis_data:
+
+networks:
+    ecommerce-network:
+        driver: bridge

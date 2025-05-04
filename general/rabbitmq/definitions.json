@@ -1,0 +1,96 @@
+{
+    "rabbit_version": "3.11.13",
+    "rabbitmq_version": "3.11.13",
+    "users": [
+        {
+            "name": "admin",
+            "password_hash": "Z8ItcZlmP7UgpkBXJQgfvYuvJVw/vFrF6XjC5OC5wFKnOkgw",
+            "hashing_algorithm": "rabbit_password_hashing_sha256",
+            "tags": "administrator"
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "/"
+        }
+    ],
+    "permissions": [
+        {
+            "user": "admin",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "topic_permissions": [],
+    "parameters": [],
+    "global_parameters": [],
+    "policies": [],
+    "queues": [
+        {
+            "name": "order-events",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-message-ttl": 86400000
+            }
+        },
+        {
+            "name": "payment-events",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-message-ttl": 86400000
+            }
+        },
+        {
+            "name": "notification-events",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {
+                "x-message-ttl": 86400000
+            }
+        }
+    ],
+    "exchanges": [
+        {
+            "name": "ecommerce_events",
+            "vhost": "/",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        }
+    ],
+    "bindings": [
+        {
+            "source": "ecommerce_events",
+            "vhost": "/",
+            "destination": "order-events",
+            "destination_type": "queue",
+            "routing_key": "order.*",
+            "arguments": {}
+        },
+        {
+            "source": "ecommerce_events",
+            "vhost": "/",
+            "destination": "payment-events",
+            "destination_type": "queue",
+            "routing_key": "payment.*",
+            "arguments": {}
+        },
+        {
+            "source": "ecommerce_events",
+            "vhost": "/",
+            "destination": "notification-events",
+            "destination_type": "queue",
+            "routing_key": "#",
+            "arguments": {}
+        }
+    ]
+}
