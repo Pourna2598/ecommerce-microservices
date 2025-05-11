@@ -1,0 +1,245 @@
+{
+    "info": {
+        "name": "Order Service",
+        "description": "Collection for the Order Service API endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Create Order",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"items\": [\n        {\n            \"productId\": \"product_id\",\n            \"quantity\": 1\n        }\n    ],\n    \"shippingAddress\": {\n        \"address\": \"123 Main St\",\n        \"city\": \"New York\",\n        \"postalCode\": \"10001\",\n        \"country\": \"USA\"\n    },\n    \"paymentMethod\": \"Credit Card\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/orders",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "orders"]
+                }
+            }
+        },
+        {
+            "name": "Get My Orders",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/orders/myorders",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "orders", "myorders"]
+                }
+            }
+        },
+        {
+            "name": "Get Order by ID",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/orders/:id",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "orders", ":id"],
+                    "variable": [
+                        {
+                            "key": "id",
+                            "value": "order_id"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Update Order to Paid",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"paymentMethod\": \"Credit Card\",\n    \"id\": \"payment_id\",\n    \"status\": \"completed\",\n    \"update_time\": \"2024-03-20T12:00:00Z\",\n    \"email_address\": \"customer@example.com\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/orders/:id/pay",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "orders", ":id", "pay"],
+                    "variable": [
+                        {
+                            "key": "id",
+                            "value": "order_id"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Cancel Order",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/orders/:id/cancel",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "orders", ":id", "cancel"],
+                    "variable": [
+                        {
+                            "key": "id",
+                            "value": "order_id"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get All Orders (Admin)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/orders?pageNumber=1&status=pending",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "orders"],
+                    "query": [
+                        {
+                            "key": "pageNumber",
+                            "value": "1"
+                        },
+                        {
+                            "key": "status",
+                            "value": "pending"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Update Order Status (Admin)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "x-service-token",
+                        "value": "{{service_token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"status\": \"shipped\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/orders/:id/status",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "orders", ":id", "status"],
+                    "variable": [
+                        {
+                            "key": "id",
+                            "value": "order_id"
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8083"
+        },
+        {
+            "key": "token",
+            "value": "your_jwt_token"
+        },
+        {
+            "key": "service_token",
+            "value": "your_service_token"
+        }
+    ]
+}
